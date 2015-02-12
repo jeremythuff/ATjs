@@ -58,7 +58,12 @@ ATJS.prototype = {
 						if(!self.functions[atObj.funcName]) self.functions[atObj.funcName] = {};
 						self.functions[atObj.funcName][method] = atObj;
 
-					    self[method](atObj);
+						console.log(typeof(self[method]));
+					    if(typeof(self[method])!=="undefined") {
+					    	self[method](atObj);
+					    } else {
+					    	console.error("There is no annotation by the name " + method);
+					    }
 					});
 
 					
@@ -97,7 +102,36 @@ ATJS.prototype = {
 		}, atObj.val);
 	},
 	ajax: function(atObj) {
-		window[atObj.funcName](atObj.val);
+
+		var self = this;
+
+		var request = new XMLHttpRequest();
+		request.open('GET', atObj.val, true);
+
+		request.onload = function() {
+			if (request.status >= 200 && request.status < 400) {
+			    window[atObj.funcName](JSON.parse(request.responseText));
+			} else {
+				console.log("error");
+			}
+		};
+
+		request.onerror = function() {
+		  cosole.log("error");
+		};
+
+		request.send();
+
+	},
+	chainBefore: function(atObj) {
+		//this should instead register as a before function the annotation manager
+		window[atObj.funcName]();
+		window[atObj.val]();	
+	}, 
+	chainAfter: function(atObj) {
+		//this should instead register as an after function the annotation manager
+		window[atObj.val]();
+		window[atObj.funcName]();	
 	}, 
 	extractValue: function(str) {
 		  var ret = "";
